@@ -1,5 +1,18 @@
 USE pokemon_item_tracker;
 
+SELECT COUNT(*) FROM ItemValues;
+SELECT value_id FROM ItemValues ORDER BY value_id LIMIT 5;
+
+SELECT value_id, item_id, market_value, recorded_date
+FROM ItemValues
+ORDER BY value_id
+LIMIT 10;
+
+INSERT INTO Users (user_id, username, email)
+VALUES (1, 'sealedcollector', 'sealed@email.com')
+ON DUPLICATE KEY UPDATE
+username=VALUES(username), email=VALUES(email);
+
 -- Force user_id = 1 to exist
 INSERT INTO Users (user_id, username, email)
 VALUES (1, 'sealedcollector', 'sealed@email.com')

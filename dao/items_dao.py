@@ -1,35 +1,29 @@
 from database import get_connection
 
 def get_all_items():
-    conn = get_connection()
-    cur = conn.cursor(dictionary=True)
+    cnx = get_connection()
+    cur = cnx.cursor(dictionary=True)
     cur.execute("""
-        SELECT p.item_id, p.item_name, p.sealed,
-               u.username,
-               s.set_name, s.release_year
-        FROM PokemonItems p
-        JOIN Users u ON p.user_id = u.user_id
-        JOIN ProductSets s ON p.set_id = s.set_id
-        ORDER BY p.item_id
+        SELECT item_id, user_id, set_id, item_name, sealed
+        FROM PokemonItems
+        ORDER BY item_id
     """)
     rows = cur.fetchall()
-    conn.close()
+    cur.close()
+    cnx.close()
     return rows
 
-
 def get_item_by_id(item_id: int):
-    conn = get_connection()
-    cur = conn.cursor(dictionary=True)
-
+    cnx = get_connection()
+    cur = cnx.cursor(dictionary=True)
     cur.execute("""
-        SELECT item_id, user_id, set_id, item_name,
-               (sealed = 1) AS sealed
+        SELECT item_id, user_id, set_id, item_name, sealed
         FROM PokemonItems
         WHERE item_id = %s
     """, (item_id,))
-
     row = cur.fetchone()
-    conn.close()
+    cur.close()
+    cnx.close()
     return row
 
 def create_item(user_id: int, set_id: int, item_name: str, sealed: bool=True):

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Pokemon ETB Tracker Client</title>
+    <style>
+        body { font-family: Arial; margin: 40px; }
+        button { margin: 5px; padding: 10px; }
+        pre { background: #f4f4f4; padding: 15px; }
+    </style>
+</head>
+<body>
+
+<h1>Pokemon ETB Tracker — HTML Client</h1>
+
+<h2>Get All Records</h2>
+
+<button onclick="getUsers()">Get All Users</button>
+<button onclick="getSets()">Get All Product Sets</button>
+<button onclick="getItems()">Get All Items</button>
+<button onclick="getValues()">Get All Item Values</button>
+
+<h3>Output</h3>
+<pre id="output">Click a button...</pre>
+
+<script>
+const base = "http://127.0.0.1:8000";
+
+async function callAPI(url) {
+    const response = await fetch(url);
+    const data = await response.json();
+    document.getElementById("output").textContent =
+        JSON.stringify(data, null, 2);
+}
+
+function getUsers() {
+    callAPI(`${base}/users/`);
+}
+
+function getSets() {
+    callAPI(`${base}/productsets/`);
+}
+
+function getItems() {
+    callAPI(`${base}/items/`);
+}
+
+function getValues() {
+    callAPI(`${base}/itemvalues/`);
+}
+</script>
+
+</body>
+</html>

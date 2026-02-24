@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from business.items_bl import ItemsBL
 
-router = APIRouter()
+router = APIRouter(prefix="/items", tags=["items"])
 bl = ItemsBL()
 
 class ItemCreate(BaseModel):
