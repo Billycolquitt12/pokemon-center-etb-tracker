@@ -1,53 +1,191 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Pokemon ETB Tracker Client</title>
-    <style>
-        body { font-family: Arial; margin: 40px; }
-        button { margin: 5px; padding: 10px; }
-        pre { background: #f4f4f4; padding: 15px; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Pokemon ETB Tracker — HTML Client</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; }
+    h1 { margin-bottom: 8px; }
+    .card { border: 1px solid #ddd; border-radius: 10px; padding: 16px; margin: 14px 0; max-width: 780px; }
+    .row { display: grid; grid-template-columns: 140px 1fr; gap: 10px; align-items: center; margin: 10px 0; }
+    input { padding: 8px; width: 100%; box-sizing: border-box; }
+    button { padding: 10px 14px; cursor: pointer; }
+    pre { background: #f6f6f6; padding: 12px; border-radius: 8px; overflow: auto; }
+    .hint { color: #555; font-size: 0.95rem; }
+  </style>
 </head>
 <body>
+  <h1>Pokemon ETB Tracker — HTML Client</h1>
+  <p class="hint">
+    Make sure your API is running at <b>http://127.0.0.1:8000</b> (uvicorn).<br/>
+    If you get foreign key errors, your <b>User ID</b> and <b>Set ID</b> must exist in the database.
+  </p>
 
-<h1>Pokemon ETB Tracker — HTML Client</h1>
+  <!-- GET ALL ITEMS -->
+  <div class="card">
+    <h2>Get All Items</h2>
+    <button id="btnGetAll">Get All Items</button>
+  </div>
 
-<h2>Get All Records</h2>
+  <!-- GET ITEM BY ID -->
+  <div class="card">
+    <h2>Get Item By ID</h2>
+    <div class="row">
+      <label for="getItemId">Item ID</label>
+      <input id="getItemId" type="number" value="1" />
+    </div>
+    <button id="btnGetOne">Get Item</button>
+  </div>
 
-<button onclick="getUsers()">Get All Users</button>
-<button onclick="getSets()">Get All Product Sets</button>
-<button onclick="getItems()">Get All Items</button>
-<button onclick="getValues()">Get All Item Values</button>
+  <!-- CREATE ITEM -->
+  <div class="card">
+    <h2>Create Item</h2>
+    <div class="row">
+      <label for="createUserId">User ID</label>
+      <input id="createUserId" type="number" value="1" />
+    </div>
+    <div class="row">
+      <label for="createSetId">Set ID</label>
+      <input id="createSetId" type="number" value="1" />
+    </div>
+    <div class="row">
+      <label for="createItemName">Item Name</label>
+      <input id="createItemName" type="text" value="HTML Client Test ETB" />
+    </div>
+    <div class="row">
+      <label for="createSealed">Sealed (true/false)</label>
+      <input id="createSealed" type="text" value="true" />
+    </div>
+    <button id="btnCreate">Create Item</button>
+  </div>
 
-<h3>Output</h3>
-<pre id="output">Click a button...</pre>
+  <!-- UPDATE ITEM -->
+  <div class="card">
+    <h2>Edit / Update Item</h2>
+    <div class="row">
+      <label for="updItemId">Item ID</label>
+      <input id="updItemId" type="number" value="1" />
+    </div>
+    <div class="row">
+      <label for="updUserId">User ID</label>
+      <input id="updUserId" type="number" value="1" />
+    </div>
+    <div class="row">
+      <label for="updSetId">Set ID</label>
+      <input id="updSetId" type="number" value="1" />
+    </div>
+    <div class="row">
+      <label for="updItemName">Item Name</label>
+      <input id="updItemName" type="text" value="Updated HTML Client ETB" />
+    </div>
+    <div class="row">
+      <label for="updSealed">Sealed (true/false)</label>
+      <input id="updSealed" type="text" value="false" />
+    </div>
+    <button id="btnUpdate">Update Item</button>
+  </div>
 
-<script>
-const base = "http://127.0.0.1:8000";
+  <!-- DELETE ITEM -->
+  <div class="card">
+    <h2>Delete Item</h2>
+    <div class="row">
+      <label for="delItemId">Item ID</label>
+      <input id="delItemId" type="number" value="1" />
+    </div>
+    <button id="btnDelete">Delete Item</button>
+  </div>
 
-async function callAPI(url) {
-    const response = await fetch(url);
-    const data = await response.json();
-    document.getElementById("output").textContent =
-        JSON.stringify(data, null, 2);
-}
+  <!-- OUTPUT -->
+  <div class="card">
+    <h2>Output</h2>
+    <pre id="output">(no output yet)</pre>
+  </div>
 
-function getUsers() {
-    callAPI(`${base}/users/`);
-}
+  <script>
+    // ✅ IMPORTANT:
+    // If your Swagger shows /items/items, then your router is mounted twice.
+    // In that case set BASE_URL to "http://127.0.0.1:8000/items"
+    // If your endpoints are normal (/items/...), keep it as below.
+    const BASE_URL = "http://127.0.0.1:8000";
 
-function getSets() {
-    callAPI(`${base}/productsets/`);
-}
+    const out = document.getElementById("output");
 
-function getItems() {
-    callAPI(`${base}/items/`);
-}
+    function sealedFromInput(id) {
+      return document.getElementById(id).value.trim().toLowerCase() === "true";
+    }
 
-function getValues() {
-    callAPI(`${base}/itemvalues/`);
-}
-</script>
+    async function showResponse(resp) {
+      const text = await resp.text(); // show errors even if server returns plain text
+      out.textContent =
+        `Status: ${resp.status}\n` +
+        `URL: ${resp.url}\n\n` +
+        text;
+    }
 
+    async function getAllItems() {
+      const resp = await fetch(`${BASE_URL}/items/`, { method: "GET" });
+      await showResponse(resp);
+    }
+
+    async function getItemById() {
+      const itemId = Number(document.getElementById("getItemId").value);
+      const resp = await fetch(`${BASE_URL}/items/${itemId}`, { method: "GET" });
+      await showResponse(resp);
+    }
+
+    async function createItem() {
+      const body = {
+        user_id: Number(document.getElementById("createUserId").value),
+        set_id: Number(document.getElementById("createSetId").value),
+        item_name: document.getElementById("createItemName").value,
+        sealed: sealedFromInput("createSealed"),
+      };
+
+      const resp = await fetch(`${BASE_URL}/items/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+
+      await showResponse(resp);
+    }
+
+    async function updateItem() {
+      const itemId = Number(document.getElementById("updItemId").value);
+
+      const body = {
+        user_id: Number(document.getElementById("updUserId").value),
+        set_id: Number(document.getElementById("updSetId").value),
+        item_name: document.getElementById("updItemName").value,
+        sealed: sealedFromInput("updSealed"),
+      };
+
+      const resp = await fetch(`${BASE_URL}/items/${itemId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+
+      await showResponse(resp);
+    }
+
+    async function deleteItem() {
+      const itemId = Number(document.getElementById("delItemId").value);
+
+      const resp = await fetch(`${BASE_URL}/items/${itemId}`, {
+        method: "DELETE",
+      });
+
+      await showResponse(resp);
+    }
+
+    // Hook up buttons
+    document.getElementById("btnGetAll").addEventListener("click", getAllItems);
+    document.getElementById("btnGetOne").addEventListener("click", getItemById);
+    document.getElementById("btnCreate").addEventListener("click", createItem);
+    document.getElementById("btnUpdate").addEventListener("click", updateItem);
+    document.getElementById("btnDelete").addEventListener("click", deleteItem);
+  </script>
 </body>
 </html>

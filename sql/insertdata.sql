@@ -3,7 +3,10 @@ USE pokemon_item_tracker;
 SELECT COUNT(*) FROM ItemValues;
 SELECT value_id FROM ItemValues ORDER BY value_id LIMIT 5;
 
+SELECT set_id, set_name FROM ProductSets ORDER BY set_id;
+
 SELECT value_id, item_id, market_value, recorded_date
+
 FROM ItemValues
 ORDER BY value_id
 LIMIT 10;
