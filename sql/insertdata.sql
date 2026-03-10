@@ -85,14 +85,11 @@ INSERT INTO ItemValues (item_id, market_value, recorded_date) VALUES
 (4, 88.00, '2025-07-01'),
 (4, 90.00, '2025-08-01');
 
--- Sanity check (run these and confirm you see rows)
-SELECT * FROM Users;
+/*SELECT * FROM Users;
 SELECT * FROM ProductSets;
 SELECT * FROM PokemonItems;
+SELECT * FROM ItemValues; */
 
-USE pokemon_item_tracker;
-
-SELECT item_id, user_id, set_id, item_name, sealed
-FROM PokemonItems
-ORDER BY item_id DESC
-LIMIT 10;
+SELECT * FROM item_id;
+SELECT * FROM Users;
+SELECT * FROM ProductSets;
