@@ -2,190 +2,732 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Pokemon ETB Tracker — HTML Client</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pokémon ETB Tracker</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 24px; }
-    h1 { margin-bottom: 8px; }
-    .card { border: 1px solid #ddd; border-radius: 10px; padding: 16px; margin: 14px 0; max-width: 780px; }
-    .row { display: grid; grid-template-columns: 140px 1fr; gap: 10px; align-items: center; margin: 10px 0; }
-    input { padding: 8px; width: 100%; box-sizing: border-box; }
-    button { padding: 10px 14px; cursor: pointer; }
-    pre { background: #f6f6f6; padding: 12px; border-radius: 8px; overflow: auto; }
-    .hint { color: #555; font-size: 0.95rem; }
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background: #f4f6f8;
+      color: #222;
+    }
+
+    header {
+      background: #cc0000;
+      color: white;
+      padding: 24px;
+      text-align: center;
+    }
+
+    header h1 {
+      margin: 0 0 8px 0;
+    }
+
+    header p {
+      margin: 0;
+      font-size: 15px;
+    }
+
+    .container {
+      max-width: 1150px;
+      margin: 24px auto;
+      padding: 0 16px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .card h2 {
+      margin-top: 0;
+      color: #cc0000;
+      margin-bottom: 8px;
+    }
+
+    .section-description {
+      font-size: 14px;
+      color: #555;
+      margin-bottom: 16px;
+      line-height: 1.5;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 16px;
+    }
+
+    .form-group {
+      margin-bottom: 12px;
+    }
+
+    label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 6px;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+
+    button {
+      background: #cc0000;
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+      margin-right: 8px;
+      margin-top: 6px;
+    }
+
+    button:hover {
+      background: #a80000;
+    }
+
+    .message {
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 8px;
+      display: none;
+    }
+
+    .success {
+      background: #e7f7ea;
+      color: #1f6b2a;
+      border: 1px solid #b8e0c1;
+    }
+
+    .error {
+      background: #fdeaea;
+      color: #9b1c1c;
+      border: 1px solid #f2bcbc;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+      background: white;
+    }
+
+    th, td {
+      border: 1px solid #ddd;
+      padding: 10px;
+      text-align: left;
+      font-size: 14px;
+    }
+
+    th {
+      background: #f0f0f0;
+    }
+
+    .result-box {
+      background: #fafafa;
+      border: 1px solid #ddd;
+      padding: 12px;
+      border-radius: 8px;
+      margin-top: 12px;
+      min-height: 50px;
+    }
+
+    .small-note {
+      font-size: 13px;
+      color: #666;
+      margin-top: 8px;
+      line-height: 1.4;
+    }
   </style>
 </head>
 <body>
-  <h1>Pokemon ETB Tracker — HTML Client</h1>
-  <p class="hint">
-    Make sure your API is running at <b>http://127.0.0.1:8000</b> (uvicorn).<br/>
-    If you get foreign key errors, your <b>User ID</b> and <b>Set ID</b> must exist in the database.
-  </p>
+  <header>
+    <h1>Pokémon ETB Tracker</h1>
+    <p>Track and manage Pokémon Center Elite Trainer Boxes</p>
+  </header>
 
-  <!-- GET ALL ITEMS -->
-  <div class="card">
-    <h2>Get All Items</h2>
-    <button id="btnGetAll">Get All Items</button>
-  </div>
+  <div class="container">
 
-  <!-- GET ITEM BY ID -->
-  <div class="card">
-    <h2>Get Item By ID</h2>
-    <div class="row">
-      <label for="getItemId">Item ID</label>
-      <input id="getItemId" type="number" value="1" />
+    <!-- ITEMS -->
+    <div class="card">
+      <h2>View All Items</h2>
+      <p class="section-description">
+        This section shows every ETB item currently saved in your database. Use this when you want to quickly see your full item list all at once.
+      </p>
+      <button onclick="getAllItems()">Load All Items</button>
+      <div id="allItemsMessage" class="message"></div>
+      <div id="itemsTableContainer"></div>
     </div>
-    <button id="btnGetOne">Get Item</button>
-  </div>
 
-  <!-- CREATE ITEM -->
-  <div class="card">
-    <h2>Create Item</h2>
-    <div class="row">
-      <label for="createUserId">User ID</label>
-      <input id="createUserId" type="number" value="1" />
-    </div>
-    <div class="row">
-      <label for="createSetId">Set ID</label>
-      <input id="createSetId" type="number" value="1" />
-    </div>
-    <div class="row">
-      <label for="createItemName">Item Name</label>
-      <input id="createItemName" type="text" value="HTML Client Test ETB" />
-    </div>
-    <div class="row">
-      <label for="createSealed">Sealed (true/false)</label>
-      <input id="createSealed" type="text" value="true" />
-    </div>
-    <button id="btnCreate">Create Item</button>
-  </div>
+    <div class="grid">
+      <div class="card">
+        <h2>Find One Item</h2>
+        <p class="section-description">
+          Use this section to search for one specific item by its Item ID. This is helpful when you only want to view one record instead of the full list.
+        </p>
+        <div class="form-group">
+          <label for="getItemId">Item ID</label>
+          <input type="number" id="getItemId" placeholder="Enter item ID">
+          <p class="small-note">The Item ID is the unique number assigned to each item in the database.</p>
+        </div>
+        <button onclick="getItemById()">Find Item</button>
+        <div id="singleItemMessage" class="message"></div>
+        <div id="singleItemResult" class="result-box"></div>
+      </div>
 
-  <!-- UPDATE ITEM -->
-  <div class="card">
-    <h2>Edit / Update Item</h2>
-    <div class="row">
-      <label for="updItemId">Item ID</label>
-      <input id="updItemId" type="number" value="1" />
+      <div class="card">
+        <h2>Create New Item</h2>
+        <p class="section-description">
+          Use this form to add a new ETB to the tracker. Fill in the item details below, then click the button to save it.
+        </p>
+        <div class="form-group">
+          <label for="createUserId">User ID</label>
+          <input type="number" id="createUserId" value="1">
+          <p class="small-note">This is the user connected to the item. Leave the default if you are only using one user for your project.</p>
+        </div>
+        <div class="form-group">
+          <label for="createSetId">Set ID</label>
+          <input type="number" id="createSetId" value="1">
+          <p class="small-note">This links the item to a Pokémon set in your database.</p>
+        </div>
+        <div class="form-group">
+          <label for="createItemName">Item Name</label>
+          <input type="text" id="createItemName" placeholder="Example: Pokémon Center Crown Zenith ETB">
+          <p class="small-note">Enter the full name of the ETB item you want to store.</p>
+        </div>
+        <div class="form-group">
+          <label for="createSealed">Sealed</label>
+          <select id="createSealed">
+            <option value="true">Yes</option>
+            <option value="false">No</option>
+          </select>
+          <p class="small-note">Choose Yes if the ETB is still sealed, or No if it has been opened.</p>
+        </div>
+        <button onclick="createItem()">Create Item</button>
+        <div id="createMessage" class="message"></div>
+      </div>
     </div>
-    <div class="row">
-      <label for="updUserId">User ID</label>
-      <input id="updUserId" type="number" value="1" />
-    </div>
-    <div class="row">
-      <label for="updSetId">Set ID</label>
-      <input id="updSetId" type="number" value="1" />
-    </div>
-    <div class="row">
-      <label for="updItemName">Item Name</label>
-      <input id="updItemName" type="text" value="Updated HTML Client ETB" />
-    </div>
-    <div class="row">
-      <label for="updSealed">Sealed (true/false)</label>
-      <input id="updSealed" type="text" value="false" />
-    </div>
-    <button id="btnUpdate">Update Item</button>
-  </div>
 
-  <!-- DELETE ITEM -->
-  <div class="card">
-    <h2>Delete Item</h2>
-    <div class="row">
-      <label for="delItemId">Item ID</label>
-      <input id="delItemId" type="number" value="1" />
-    </div>
-    <button id="btnDelete">Delete Item</button>
-  </div>
+    <div class="grid">
+      <div class="card">
+        <h2>Update Item</h2>
+        <p class="section-description">
+          Use this section to change the information for an item that already exists in the database. Enter the Item ID of the record you want to edit, then type in the new values.
+        </p>
+        <div class="form-group">
+          <label for="updateItemId">Item ID</label>
+          <input type="number" id="updateItemId" placeholder="Enter item ID">
+          <p class="small-note">Enter the ID of the item you want to update.</p>
+        </div>
+        <div class="form-group">
+          <label for="updateUserId">User ID</label>
+          <input type="number" id="updateUserId" value="1">
+          <p class="small-note">This updates which user the item belongs to.</p>
+        </div>
+        <div class="form-group">
+          <label for="updateSetId">Set ID</label>
+          <input type="number" id="updateSetId" value="1">
+          <p class="small-note">This updates which Pokémon set is connected to the item.</p>
+        </div>
+        <div class="form-group">
+          <label for="updateItemName">New Item Name</label>
+          <input type="text" id="updateItemName" placeholder="Updated item name">
+          <p class="small-note">Type the new name you want this item to have.</p>
+        </div>
+        <div class="form-group">
+          <label for="updateSealed">Sealed</label>
+          <select id="updateSealed">
+            <option value="true">Yes</option>
+            <option value="false">No</option>
+          </select>
+          <p class="small-note">Change the sealed status if needed.</p>
+        </div>
+        <button onclick="updateItem()">Update Item</button>
+        <div id="updateMessage" class="message"></div>
+      </div>
 
-  <!-- OUTPUT -->
-  <div class="card">
-    <h2>Output</h2>
-    <pre id="output">(no output yet)</pre>
+      <div class="card">
+        <h2>Delete Item</h2>
+        <p class="section-description">
+          Use this section to permanently remove an item from the database. Be careful, because once deleted, the item record may not be easy to recover.
+        </p>
+        <div class="form-group">
+          <label for="deleteItemId">Item ID</label>
+          <input type="number" id="deleteItemId" placeholder="Enter item ID">
+          <p class="small-note">Enter the ID of the item you want to delete.</p>
+        </div>
+        <button onclick="deleteItem()">Delete Item</button>
+        <div id="deleteMessage" class="message"></div>
+        <p class="small-note">Delete is optional in some parts of the project, but this is available if your API supports it.</p>
+      </div>
+    </div>
+
+    <!-- PRODUCT SETS -->
+    <div class="card">
+      <h2>View All Product Sets</h2>
+      <p class="section-description">
+        This section displays every Pokémon product set currently stored in the database. Use it to quickly see all available sets and their release years.
+      </p>
+      <button onclick="getAllProductSets()">Load All Product Sets</button>
+      <div id="allProductSetsMessage" class="message"></div>
+      <div id="productSetsTableContainer"></div>
+    </div>
+
+    <div class="card">
+      <h2>Find One Product Set</h2>
+      <p class="section-description">
+        Use this section to search for one specific Pokémon set by its Set ID. This is useful when you want details about a single set instead of viewing the full list.
+      </p>
+      <div class="form-group">
+        <label for="getProductSetId">Set ID</label>
+        <input type="number" id="getProductSetId" placeholder="Enter set ID">
+        <p class="small-note">The Set ID is the unique number assigned to each Pokémon set in the database.</p>
+      </div>
+      <button onclick="getOneProductSet()">Find Product Set</button>
+      <div id="singleProductSetMessage" class="message"></div>
+      <div id="singleProductSetResult" class="result-box"></div>
+    </div>
+
+    <!-- ITEM VALUES -->
+    <div class="card">
+      <h2>Get All Item Values</h2>
+      <p class="section-description">
+        This section loads the full price or market value history for all items. It is useful for viewing how item values have been recorded over time.
+      </p>
+      <button onclick="getAllItemValues()">Load All Item Values</button>
+      <div id="allItemValuesMessage" class="message"></div>
+      <div id="itemValuesTableContainer"></div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h2>Get One Item Value</h2>
+        <p class="section-description">
+          Use this section to look up one specific market value record by its Value ID.
+        </p>
+        <div class="form-group">
+          <label for="getValueId">Value ID</label>
+          <input type="number" id="getValueId" placeholder="Enter value ID">
+          <p class="small-note">The Value ID is the unique number for a single value history record.</p>
+        </div>
+        <button onclick="getOneItemValue()">Find Item Value</button>
+        <div id="singleValueMessage" class="message"></div>
+        <div id="singleValueResult" class="result-box"></div>
+      </div>
+
+      <div class="card">
+        <h2>Search Item Values by Item</h2>
+        <p class="section-description">
+          Use this section to see all recorded value history for one specific item. This helps you track price changes for that item over time.
+        </p>
+        <div class="form-group">
+          <label for="searchItemId">Item ID</label>
+          <input type="number" id="searchItemId" placeholder="Enter item ID">
+          <p class="small-note">Enter the Item ID to load all market values connected to that item.</p>
+        </div>
+        <button onclick="searchValuesByItem()">Search by Item</button>
+        <div id="searchValuesMessage" class="message"></div>
+        <div id="searchValuesResult"></div>
+      </div>
+    </div>
+
+    <!-- SEARCH PRODUCT SETS BY YEAR -->
+    <div class="card">
+      <h2>Search Product Sets by Year</h2>
+      <p class="section-description">
+        This section lets you search for Pokémon product sets based on the year they were released. This is useful if you want to filter sets by release year instead of searching by name.
+      </p>
+      <div class="form-group">
+        <label for="searchYear">Release Year</label>
+        <input type="number" id="searchYear" placeholder="Enter a year like 2024">
+        <p class="small-note">Enter a year to see all product sets released during that year.</p>
+      </div>
+      <button onclick="searchByYear()">Search by Year</button>
+      <div id="searchYearMessage" class="message"></div>
+      <div id="searchYearResult"></div>
+    </div>
+
   </div>
 
   <script>
-    // ✅ IMPORTANT:
-    // If your Swagger shows /items/items, then your router is mounted twice.
-    // In that case set BASE_URL to "http://127.0.0.1:8000/items"
-    // If your endpoints are normal (/items/...), keep it as below.
     const BASE_URL = "http://127.0.0.1:8000";
 
-    const out = document.getElementById("output");
-
-    function sealedFromInput(id) {
-      return document.getElementById(id).value.trim().toLowerCase() === "true";
+    function showMessage(elementId, text, isError = false) {
+      const box = document.getElementById(elementId);
+      box.style.display = "block";
+      box.className = "message " + (isError ? "error" : "success");
+      box.textContent = text;
     }
 
-    async function showResponse(resp) {
-      const text = await resp.text(); // show errors even if server returns plain text
-      out.textContent =
-        `Status: ${resp.status}\n` +
-        `URL: ${resp.url}\n\n` +
-        text;
+    function clearMessage(elementId) {
+      const box = document.getElementById(elementId);
+      box.style.display = "none";
+      box.textContent = "";
+    }
+
+    function buildTable(data, columns) {
+      if (!Array.isArray(data) || data.length === 0) {
+        return "<p>No results found.</p>";
+      }
+
+      let html = "<table><thead><tr>";
+      columns.forEach(col => {
+        html += `<th>${col.label}</th>`;
+      });
+      html += "</tr></thead><tbody>";
+
+      data.forEach(row => {
+        html += "<tr>";
+        columns.forEach(col => {
+          let value = row[col.key];
+
+          if (col.key === "sealed") {
+            value = row[col.key] ? "Yes" : "No";
+          }
+
+          html += `<td>${value ?? ""}</td>`;
+        });
+        html += "</tr>";
+      });
+
+      html += "</tbody></table>";
+      return html;
     }
 
     async function getAllItems() {
-      const resp = await fetch(`${BASE_URL}/items/`, { method: "GET" });
-      await showResponse(resp);
+      clearMessage("allItemsMessage");
+
+      try {
+        const response = await fetch(`${BASE_URL}/items/`);
+        const data = await response.json();
+
+        if (!response.ok) {
+          showMessage("allItemsMessage", "Could not load items.", true);
+          return;
+        }
+
+        document.getElementById("itemsTableContainer").innerHTML = buildTable(data, [
+          { key: "item_id", label: "Item ID" },
+          { key: "user_id", label: "User ID" },
+          { key: "set_id", label: "Set ID" },
+          { key: "item_name", label: "Item Name" },
+          { key: "sealed", label: "Sealed" }
+        ]);
+
+        showMessage("allItemsMessage", "Items loaded successfully.");
+      } catch (error) {
+        showMessage("allItemsMessage", "Error loading items: " + error.message, true);
+      }
     }
 
     async function getItemById() {
-      const itemId = Number(document.getElementById("getItemId").value);
-      const resp = await fetch(`${BASE_URL}/items/${itemId}`, { method: "GET" });
-      await showResponse(resp);
+      clearMessage("singleItemMessage");
+      const itemId = document.getElementById("getItemId").value;
+
+      if (!itemId) {
+        showMessage("singleItemMessage", "Please enter an item ID.", true);
+        return;
+      }
+
+      try {
+        const response = await fetch(`${BASE_URL}/items/${itemId}`);
+        const data = await response.json();
+
+        if (!response.ok) {
+          document.getElementById("singleItemResult").innerHTML = "";
+          showMessage("singleItemMessage", data.detail || "Item not found.", true);
+          return;
+        }
+
+        document.getElementById("singleItemResult").innerHTML = `
+          <strong>Item ID:</strong> ${data.item_id}<br>
+          <strong>User ID:</strong> ${data.user_id}<br>
+          <strong>Set ID:</strong> ${data.set_id}<br>
+          <strong>Item Name:</strong> ${data.item_name}<br>
+          <strong>Sealed:</strong> ${data.sealed ? "Yes" : "No"}
+        `;
+        showMessage("singleItemMessage", "Item found.");
+      } catch (error) {
+        showMessage("singleItemMessage", "Error: " + error.message, true);
+      }
     }
 
     async function createItem() {
+      clearMessage("createMessage");
+
       const body = {
         user_id: Number(document.getElementById("createUserId").value),
         set_id: Number(document.getElementById("createSetId").value),
         item_name: document.getElementById("createItemName").value,
-        sealed: sealedFromInput("createSealed"),
+        sealed: document.getElementById("createSealed").value === "true"
       };
 
-      const resp = await fetch(`${BASE_URL}/items/`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
+      try {
+        const response = await fetch(`${BASE_URL}/items/`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body)
+        });
 
-      await showResponse(resp);
+        const text = await response.text();
+
+        if (!response.ok) {
+          showMessage("createMessage", "Create failed: " + text, true);
+          return;
+        }
+
+        showMessage("createMessage", "Item created successfully. Response: " + text);
+        getAllItems();
+      } catch (error) {
+        showMessage("createMessage", "Error: " + error.message, true);
+      }
     }
 
     async function updateItem() {
-      const itemId = Number(document.getElementById("updItemId").value);
+      clearMessage("updateMessage");
+
+      const itemId = document.getElementById("updateItemId").value;
 
       const body = {
-        user_id: Number(document.getElementById("updUserId").value),
-        set_id: Number(document.getElementById("updSetId").value),
-        item_name: document.getElementById("updItemName").value,
-        sealed: sealedFromInput("updSealed"),
+        user_id: Number(document.getElementById("updateUserId").value),
+        set_id: Number(document.getElementById("updateSetId").value),
+        item_name: document.getElementById("updateItemName").value,
+        sealed: document.getElementById("updateSealed").value === "true"
       };
 
-      const resp = await fetch(`${BASE_URL}/items/${itemId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
+      try {
+        const response = await fetch(`${BASE_URL}/items/${itemId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body)
+        });
 
-      await showResponse(resp);
+        const text = await response.text();
+
+        if (!response.ok) {
+          showMessage("updateMessage", "Update failed: " + text, true);
+          return;
+        }
+
+        showMessage("updateMessage", "Item updated successfully. Response: " + text);
+        getAllItems();
+      } catch (error) {
+        showMessage("updateMessage", "Error: " + error.message, true);
+      }
     }
 
     async function deleteItem() {
-      const itemId = Number(document.getElementById("delItemId").value);
+      clearMessage("deleteMessage");
+      const itemId = document.getElementById("deleteItemId").value;
 
-      const resp = await fetch(`${BASE_URL}/items/${itemId}`, {
-        method: "DELETE",
-      });
+      try {
+        const response = await fetch(`${BASE_URL}/items/${itemId}`, {
+          method: "DELETE"
+        });
 
-      await showResponse(resp);
+        const text = await response.text();
+
+        if (!response.ok) {
+          showMessage("deleteMessage", "Delete failed: " + text, true);
+          return;
+        }
+
+        showMessage("deleteMessage", "Item deleted successfully. Response: " + text);
+        getAllItems();
+      } catch (error) {
+        showMessage("deleteMessage", "Error: " + error.message, true);
+      }
     }
 
-    // Hook up buttons
-    document.getElementById("btnGetAll").addEventListener("click", getAllItems);
-    document.getElementById("btnGetOne").addEventListener("click", getItemById);
-    document.getElementById("btnCreate").addEventListener("click", createItem);
-    document.getElementById("btnUpdate").addEventListener("click", updateItem);
-    document.getElementById("btnDelete").addEventListener("click", deleteItem);
+    async function getAllProductSets() {
+      clearMessage("allProductSetsMessage");
+
+      try {
+        const response = await fetch(`${BASE_URL}/productsets/`);
+        const data = await response.json();
+
+        if (!response.ok) {
+          showMessage("allProductSetsMessage", "Could not load product sets.", true);
+          return;
+        }
+
+        document.getElementById("productSetsTableContainer").innerHTML = buildTable(data, [
+          { key: "set_id", label: "Set ID" },
+          { key: "set_name", label: "Set Name" },
+          { key: "release_year", label: "Release Year" }
+        ]);
+
+        showMessage("allProductSetsMessage", "Product sets loaded successfully.");
+      } catch (error) {
+        showMessage("allProductSetsMessage", "Error loading product sets: " + error.message, true);
+      }
+    }
+
+    async function getOneProductSet() {
+      clearMessage("singleProductSetMessage");
+      const setId = document.getElementById("getProductSetId").value;
+
+      if (!setId) {
+        showMessage("singleProductSetMessage", "Please enter a set ID.", true);
+        return;
+      }
+
+      try {
+        const response = await fetch(`${BASE_URL}/productsets/${setId}`);
+        const data = await response.json();
+
+        if (!response.ok) {
+          document.getElementById("singleProductSetResult").innerHTML = "";
+          showMessage("singleProductSetMessage", data.detail || "Product set not found.", true);
+          return;
+        }
+
+        document.getElementById("singleProductSetResult").innerHTML = `
+          <strong>Set ID:</strong> ${data.set_id}<br>
+          <strong>Set Name:</strong> ${data.set_name}<br>
+          <strong>Release Year:</strong> ${data.release_year}
+        `;
+        showMessage("singleProductSetMessage", "Product set found.");
+      } catch (error) {
+        showMessage("singleProductSetMessage", "Error: " + error.message, true);
+      }
+    }
+
+    async function getAllItemValues() {
+      clearMessage("allItemValuesMessage");
+
+      try {
+        const response = await fetch(`${BASE_URL}/itemvalues/`);
+        const data = await response.json();
+
+        if (!response.ok) {
+          showMessage("allItemValuesMessage", "Could not load item values.", true);
+          return;
+        }
+
+        document.getElementById("itemValuesTableContainer").innerHTML = buildTable(data, [
+          { key: "value_id", label: "Value ID" },
+          { key: "item_id", label: "Item ID" },
+          { key: "item_name", label: "Item Name" },
+          { key: "set_name", label: "Set Name" },
+          { key: "market_value", label: "Market Value" },
+          { key: "recorded_date", label: "Recorded Date" }
+        ]);
+
+        showMessage("allItemValuesMessage", "Item values loaded successfully.");
+      } catch (error) {
+        showMessage("allItemValuesMessage", "Error loading item values: " + error.message, true);
+      }
+    }
+
+    async function getOneItemValue() {
+      clearMessage("singleValueMessage");
+      const valueId = document.getElementById("getValueId").value;
+
+      if (!valueId) {
+        showMessage("singleValueMessage", "Please enter a value ID.", true);
+        return;
+      }
+
+      try {
+        const response = await fetch(`${BASE_URL}/itemvalues/${valueId}`);
+        const data = await response.json();
+
+        if (!response.ok) {
+          document.getElementById("singleValueResult").innerHTML = "";
+          showMessage("singleValueMessage", data.detail || "Item value not found.", true);
+          return;
+        }
+
+        document.getElementById("singleValueResult").innerHTML = `
+          <strong>Value ID:</strong> ${data.value_id}<br>
+          <strong>Item ID:</strong> ${data.item_id}<br>
+          <strong>Item Name:</strong> ${data.item_name}<br>
+          <strong>Set Name:</strong> ${data.set_name}<br>
+          <strong>Market Value:</strong> ${data.market_value}<br>
+          <strong>Recorded Date:</strong> ${data.recorded_date}
+        `;
+        showMessage("singleValueMessage", "Item value found.");
+      } catch (error) {
+        showMessage("singleValueMessage", "Error: " + error.message, true);
+      }
+    }
+
+    async function searchByYear() {
+      clearMessage("searchYearMessage");
+      const year = document.getElementById("searchYear").value;
+
+      if (!year) {
+        showMessage("searchYearMessage", "Please enter a year.", true);
+        return;
+      }
+
+      try {
+        const response = await fetch(`${BASE_URL}/productsets/by-year/${year}`);
+        const data = await response.json();
+
+        if (!response.ok) {
+          showMessage("searchYearMessage", "Search by year failed.", true);
+          return;
+        }
+
+        document.getElementById("searchYearResult").innerHTML = buildTable(data, [
+          { key: "set_id", label: "Set ID" },
+          { key: "set_name", label: "Set Name" },
+          { key: "release_year", label: "Release Year" }
+        ]);
+
+        showMessage("searchYearMessage", "Search by year completed.");
+      } catch (error) {
+        showMessage("searchYearMessage", "Error: " + error.message, true);
+      }
+    }
+
+    async function searchValuesByItem() {
+      clearMessage("searchValuesMessage");
+      const itemId = document.getElementById("searchItemId").value;
+
+      if (!itemId) {
+        showMessage("searchValuesMessage", "Please enter an item ID.", true);
+        return;
+      }
+
+      try {
+        const response = await fetch(`${BASE_URL}/itemvalues/by-item/${itemId}`);
+        const data = await response.json();
+
+        if (!response.ok) {
+          showMessage("searchValuesMessage", "Search by item failed.", true);
+          return;
+        }
+
+        document.getElementById("searchValuesResult").innerHTML = buildTable(data, [
+          { key: "value_id", label: "Value ID" },
+          { key: "item_id", label: "Item ID" },
+          { key: "item_name", label: "Item Name" },
+          { key: "set_name", label: "Set Name" },
+          { key: "market_value", label: "Market Value" },
+          { key: "recorded_date", label: "Recorded Date" }
+        ]);
+
+        showMessage("searchValuesMessage", "Search by item completed.");
+      } catch (error) {
+        showMessage("searchValuesMessage", "Error: " + error.message, true);
+      }
+    }
   </script>
 </body>
 </html>
