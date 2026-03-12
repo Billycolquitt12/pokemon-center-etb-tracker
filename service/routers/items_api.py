@@ -5,22 +5,29 @@ from business.items_bl import ItemsBL
 router = APIRouter(prefix="/items", tags=["items"])
 bl = ItemsBL()
 
+
 class ItemCreate(BaseModel):
     user_id: int
     set_id: int
     item_name: str
     sealed: bool = True
 
+
 @router.get("/")
 def get_all():
     return bl.get_all_items()
 
+
 @router.get("/{item_id}")
 def get_one(item_id: int):
-    item = bl.get_item_by_id(item_id)
-    if item is None:
-        raise HTTPException(status_code=404, detail="Item not found")
-    return item
+    try:
+        item = bl.get_item_by_id(item_id)
+        if item is None:
+            raise HTTPException(status_code=404, detail="Item not found")
+        return item
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
 
 @router.post("/")
 def create(body: ItemCreate):
@@ -30,16 +37,24 @@ def create(body: ItemCreate):
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+
 @router.put("/{item_id}")
 def update(item_id: int, body: ItemCreate):
-    rows = bl.update_item(item_id, body.user_id, body.set_id, body.item_name, body.sealed)
-    if rows == 0:
-        raise HTTPException(status_code=404, detail="Item not found")
-    return {"updated": True}
+    try:
+        rows = bl.update_item(item_id, body.user_id, body.set_id, body.item_name, body.sealed)
+        if rows == 0:
+            raise HTTPException(status_code=404, detail="Item not found")
+        return {"updated": True}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
 
 @router.delete("/{item_id}")
 def delete(item_id: int):
-    rows = bl.delete_item(item_id)
-    if rows == 0:
-        raise HTTPException(status_code=404, detail="Item not found")
-    return {"deleted": True}
+    try:
+        rows = bl.delete_item(item_id)
+        if rows == 0:
+            raise HTTPException(status_code=404, detail="Item not found")
+        return {"deleted": True}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))

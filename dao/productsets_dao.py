@@ -1,6 +1,4 @@
-# dao/productsets_dao.py
 from database import get_connection
-
 
 def get_all_sets():
     cnx = get_connection()
@@ -15,7 +13,6 @@ def get_all_sets():
     cnx.close()
     return rows
 
-
 def get_set_by_id(set_id: int):
     cnx = get_connection()
     cur = cnx.cursor(dictionary=True)
@@ -29,9 +26,7 @@ def get_set_by_id(set_id: int):
     cnx.close()
     return row
 
-
 def get_sets_by_year(year: int):
-    """Subset endpoint example: get all sets by release year."""
     cnx = get_connection()
     cur = cnx.cursor(dictionary=True)
     cur.execute("""
@@ -44,3 +39,16 @@ def get_sets_by_year(year: int):
     cur.close()
     cnx.close()
     return rows
+
+def create_set(set_name: str, release_year: int):
+    cnx = get_connection()
+    cur = cnx.cursor()
+    cur.execute("""
+        INSERT INTO ProductSets (set_name, release_year)
+        VALUES (%s, %s)
+    """, (set_name, release_year))
+    cnx.commit()
+    new_id = cur.lastrowid
+    cur.close()
+    cnx.close()
+    return new_id

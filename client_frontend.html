@@ -99,6 +99,14 @@
       background: #a80000;
     }
 
+    .secondary-button {
+      background: #666;
+    }
+
+    .secondary-button:hover {
+      background: #4d4d4d;
+    }
+
     .message {
       margin-top: 12px;
       padding: 12px;
@@ -191,7 +199,7 @@
       <div class="card">
         <h2>Create New Item</h2>
         <p class="section-description">
-          Use this form to add a new ETB to the tracker. Fill in the item details below, then click the button to save it.
+          Use this form to add a new ETB to the tracker. Choose a product set from the dropdown so the item is linked to a valid set in your database.
         </p>
         <div class="form-group">
           <label for="createUserId">User ID</label>
@@ -199,9 +207,11 @@
           <p class="small-note">This is the user connected to the item. Leave the default if you are only using one user for your project.</p>
         </div>
         <div class="form-group">
-          <label for="createSetId">Set ID</label>
-          <input type="number" id="createSetId" value="1">
-          <p class="small-note">This links the item to a Pokémon set in your database.</p>
+          <label for="createSetId">Product Set</label>
+          <select id="createSetId">
+            <option value="">Loading product sets...</option>
+          </select>
+          <p class="small-note">Choose the Pokémon set this item belongs to. Only valid sets from your database appear here.</p>
         </div>
         <div class="form-group">
           <label for="createItemName">Item Name</label>
@@ -217,6 +227,7 @@
           <p class="small-note">Choose Yes if the ETB is still sealed, or No if it has been opened.</p>
         </div>
         <button onclick="createItem()">Create Item</button>
+        <button class="secondary-button" onclick="loadProductSetDropdowns()">Refresh Sets</button>
         <div id="createMessage" class="message"></div>
       </div>
     </div>
@@ -225,7 +236,7 @@
       <div class="card">
         <h2>Update Item</h2>
         <p class="section-description">
-          Use this section to change the information for an item that already exists in the database. Enter the Item ID of the record you want to edit, then type in the new values.
+          Use this section to change the information for an item that already exists in the database. Choose a valid product set from the dropdown when updating.
         </p>
         <div class="form-group">
           <label for="updateItemId">Item ID</label>
@@ -238,9 +249,11 @@
           <p class="small-note">This updates which user the item belongs to.</p>
         </div>
         <div class="form-group">
-          <label for="updateSetId">Set ID</label>
-          <input type="number" id="updateSetId" value="1">
-          <p class="small-note">This updates which Pokémon set is connected to the item.</p>
+          <label for="updateSetId">Product Set</label>
+          <select id="updateSetId">
+            <option value="">Loading product sets...</option>
+          </select>
+          <p class="small-note">Choose the Pokémon set connected to this item.</p>
         </div>
         <div class="form-group">
           <label for="updateItemName">New Item Name</label>
@@ -256,6 +269,7 @@
           <p class="small-note">Change the sealed status if needed.</p>
         </div>
         <button onclick="updateItem()">Update Item</button>
+        <button class="secondary-button" onclick="loadProductSetDropdowns()">Refresh Sets</button>
         <div id="updateMessage" class="message"></div>
       </div>
 
@@ -276,6 +290,42 @@
     </div>
 
     <!-- PRODUCT SETS -->
+    <div class="grid">
+      <div class="card">
+        <h2>Create New Product Set</h2>
+        <p class="section-description">
+          Use this section to add a new Pokémon product set to the database. After creating it, it can be used when creating or updating items.
+        </p>
+        <div class="form-group">
+          <label for="createSetName">Set Name</label>
+          <input type="text" id="createSetName" placeholder="Example: Crown Zenith">
+          <p class="small-note">Enter the name of the Pokémon set.</p>
+        </div>
+        <div class="form-group">
+          <label for="createReleaseYear">Release Year</label>
+          <input type="number" id="createReleaseYear" placeholder="Example: 2023">
+          <p class="small-note">Enter the year this set was released.</p>
+        </div>
+        <button onclick="createProductSet()">Create Product Set</button>
+        <div id="createProductSetMessage" class="message"></div>
+      </div>
+
+      <div class="card">
+        <h2>Find One Product Set</h2>
+        <p class="section-description">
+          Use this section to search for one specific Pokémon set by its Set ID. This is useful when you want details about a single set instead of viewing the full list.
+        </p>
+        <div class="form-group">
+          <label for="getProductSetId">Set ID</label>
+          <input type="number" id="getProductSetId" placeholder="Enter set ID">
+          <p class="small-note">The Set ID is the unique number assigned to each Pokémon set in the database.</p>
+        </div>
+        <button onclick="getOneProductSet()">Find Product Set</button>
+        <div id="singleProductSetMessage" class="message"></div>
+        <div id="singleProductSetResult" class="result-box"></div>
+      </div>
+    </div>
+
     <div class="card">
       <h2>View All Product Sets</h2>
       <p class="section-description">
@@ -284,21 +334,6 @@
       <button onclick="getAllProductSets()">Load All Product Sets</button>
       <div id="allProductSetsMessage" class="message"></div>
       <div id="productSetsTableContainer"></div>
-    </div>
-
-    <div class="card">
-      <h2>Find One Product Set</h2>
-      <p class="section-description">
-        Use this section to search for one specific Pokémon set by its Set ID. This is useful when you want details about a single set instead of viewing the full list.
-      </p>
-      <div class="form-group">
-        <label for="getProductSetId">Set ID</label>
-        <input type="number" id="getProductSetId" placeholder="Enter set ID">
-        <p class="small-note">The Set ID is the unique number assigned to each Pokémon set in the database.</p>
-      </div>
-      <button onclick="getOneProductSet()">Find Product Set</button>
-      <div id="singleProductSetMessage" class="message"></div>
-      <div id="singleProductSetResult" class="result-box"></div>
     </div>
 
     <!-- ITEM VALUES -->
@@ -407,6 +442,39 @@
       return html;
     }
 
+    async function loadProductSetDropdowns() {
+      try {
+        const response = await fetch(`${BASE_URL}/productsets/`);
+        const data = await response.json();
+
+        const createSelect = document.getElementById("createSetId");
+        const updateSelect = document.getElementById("updateSetId");
+
+        if (!response.ok) {
+          createSelect.innerHTML = `<option value="">Could not load product sets</option>`;
+          updateSelect.innerHTML = `<option value="">Could not load product sets</option>`;
+          return;
+        }
+
+        if (!Array.isArray(data) || data.length === 0) {
+          createSelect.innerHTML = `<option value="">No product sets found</option>`;
+          updateSelect.innerHTML = `<option value="">No product sets found</option>`;
+          return;
+        }
+
+        let options = `<option value="">Select a product set</option>`;
+        data.forEach(set => {
+          options += `<option value="${set.set_id}">${set.set_id} - ${set.set_name} (${set.release_year})</option>`;
+        });
+
+        createSelect.innerHTML = options;
+        updateSelect.innerHTML = options;
+      } catch (error) {
+        document.getElementById("createSetId").innerHTML = `<option value="">Error loading product sets</option>`;
+        document.getElementById("updateSetId").innerHTML = `<option value="">Error loading product sets</option>`;
+      }
+    }
+
     async function getAllItems() {
       clearMessage("allItemsMessage");
 
@@ -468,10 +536,23 @@
     async function createItem() {
       clearMessage("createMessage");
 
+      const selectedSetId = document.getElementById("createSetId").value;
+      const itemName = document.getElementById("createItemName").value.trim();
+
+      if (!selectedSetId) {
+        showMessage("createMessage", "Please choose a valid product set.", true);
+        return;
+      }
+
+      if (!itemName) {
+        showMessage("createMessage", "Please enter an item name.", true);
+        return;
+      }
+
       const body = {
         user_id: Number(document.getElementById("createUserId").value),
-        set_id: Number(document.getElementById("createSetId").value),
-        item_name: document.getElementById("createItemName").value,
+        set_id: Number(selectedSetId),
+        item_name: itemName,
         sealed: document.getElementById("createSealed").value === "true"
       };
 
@@ -482,15 +563,27 @@
           body: JSON.stringify(body)
         });
 
-        const text = await response.text();
+        let result;
+        const contentType = response.headers.get("content-type") || "";
+
+        if (contentType.includes("application/json")) {
+          result = await response.json();
+        } else {
+          result = await response.text();
+        }
 
         if (!response.ok) {
-          showMessage("createMessage", "Create failed: " + text, true);
+          const errorText = typeof result === "string" ? result : (result.detail || JSON.stringify(result));
+          showMessage("createMessage", "Create failed: " + errorText, true);
           return;
         }
 
-        showMessage("createMessage", "Item created successfully. Response: " + text);
+        showMessage("createMessage", "Item created successfully.");
+        document.getElementById("createItemName").value = "";
+        document.getElementById("createSealed").value = "true";
+        document.getElementById("createSetId").value = "";
         getAllItems();
+        getAllItemValues();
       } catch (error) {
         showMessage("createMessage", "Error: " + error.message, true);
       }
@@ -500,11 +593,28 @@
       clearMessage("updateMessage");
 
       const itemId = document.getElementById("updateItemId").value;
+      const selectedSetId = document.getElementById("updateSetId").value;
+      const itemName = document.getElementById("updateItemName").value.trim();
+
+      if (!itemId) {
+        showMessage("updateMessage", "Please enter an item ID.", true);
+        return;
+      }
+
+      if (!selectedSetId) {
+        showMessage("updateMessage", "Please choose a valid product set.", true);
+        return;
+      }
+
+      if (!itemName) {
+        showMessage("updateMessage", "Please enter a new item name.", true);
+        return;
+      }
 
       const body = {
         user_id: Number(document.getElementById("updateUserId").value),
-        set_id: Number(document.getElementById("updateSetId").value),
-        item_name: document.getElementById("updateItemName").value,
+        set_id: Number(selectedSetId),
+        item_name: itemName,
         sealed: document.getElementById("updateSealed").value === "true"
       };
 
@@ -515,14 +625,22 @@
           body: JSON.stringify(body)
         });
 
-        const text = await response.text();
+        let result;
+        const contentType = response.headers.get("content-type") || "";
+
+        if (contentType.includes("application/json")) {
+          result = await response.json();
+        } else {
+          result = await response.text();
+        }
 
         if (!response.ok) {
-          showMessage("updateMessage", "Update failed: " + text, true);
+          const errorText = typeof result === "string" ? result : (result.detail || JSON.stringify(result));
+          showMessage("updateMessage", "Update failed: " + errorText, true);
           return;
         }
 
-        showMessage("updateMessage", "Item updated successfully. Response: " + text);
+        showMessage("updateMessage", "Item updated successfully.");
         getAllItems();
       } catch (error) {
         showMessage("updateMessage", "Error: " + error.message, true);
@@ -532,6 +650,11 @@
     async function deleteItem() {
       clearMessage("deleteMessage");
       const itemId = document.getElementById("deleteItemId").value;
+
+      if (!itemId) {
+        showMessage("deleteMessage", "Please enter an item ID.", true);
+        return;
+      }
 
       try {
         const response = await fetch(`${BASE_URL}/items/${itemId}`, {
@@ -545,10 +668,63 @@
           return;
         }
 
-        showMessage("deleteMessage", "Item deleted successfully. Response: " + text);
+        showMessage("deleteMessage", "Item deleted successfully.");
         getAllItems();
       } catch (error) {
         showMessage("deleteMessage", "Error: " + error.message, true);
+      }
+    }
+
+    async function createProductSet() {
+      clearMessage("createProductSetMessage");
+
+      const setName = document.getElementById("createSetName").value.trim();
+      const releaseYear = document.getElementById("createReleaseYear").value;
+
+      if (!setName) {
+        showMessage("createProductSetMessage", "Please enter a set name.", true);
+        return;
+      }
+
+      if (!releaseYear) {
+        showMessage("createProductSetMessage", "Please enter a release year.", true);
+        return;
+      }
+
+      const body = {
+        set_name: setName,
+        release_year: Number(releaseYear)
+      };
+
+      try {
+        const response = await fetch(`${BASE_URL}/productsets/`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body)
+        });
+
+        let result;
+        const contentType = response.headers.get("content-type") || "";
+
+        if (contentType.includes("application/json")) {
+          result = await response.json();
+        } else {
+          result = await response.text();
+        }
+
+        if (!response.ok) {
+          const errorText = typeof result === "string" ? result : (result.detail || JSON.stringify(result));
+          showMessage("createProductSetMessage", "Create product set failed: " + errorText, true);
+          return;
+        }
+
+        showMessage("createProductSetMessage", "Product set created successfully.");
+        document.getElementById("createSetName").value = "";
+        document.getElementById("createReleaseYear").value = "";
+        getAllProductSets();
+        loadProductSetDropdowns();
+      } catch (error) {
+        showMessage("createProductSetMessage", "Error: " + error.message, true);
       }
     }
 
@@ -728,6 +904,10 @@
         showMessage("searchValuesMessage", "Error: " + error.message, true);
       }
     }
+
+    window.onload = function () {
+      loadProductSetDropdowns();
+    };
   </script>
 </body>
 </html>
